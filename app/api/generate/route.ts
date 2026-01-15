@@ -16,10 +16,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file type
-    if (!imageFile.type.match(/^image\/(jpeg|jpg|png)$/)) {
+    // Validate file type - support JPG, PNG, WebP, AVIF
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif']
+    if (!validTypes.includes(imageFile.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Please upload a JPG or PNG image.' },
+        { error: 'Invalid file type. Please upload a JPG, PNG, WebP, or AVIF image.' },
         { status: 400 }
       )
     }

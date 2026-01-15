@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [],
+    domains: ['pub-31178c53271846bd9cb48918a4fdd72e.r2.dev'],
     unoptimized: true, // Allow data URIs and unoptimized images
   },
   eslint: {

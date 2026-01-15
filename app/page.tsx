@@ -105,36 +105,38 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8">
+    <main className="min-h-screen flex flex-col items-center justify-center p-8" style={{ backgroundColor: '#ededed' }}>
       <div className="w-full max-w-4xl">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          3D Model Generator
-        </h1>
-
         {state === 'upload' && (
           <UploadComponent onUpload={handleUpload} />
         )}
 
         {state === 'loading' && (
-          <LoadingComponent jobId={jobId} progress={progress} statusMessage={statusMessage} />
+          <div className="w-full flex justify-center">
+            <LoadingComponent jobId={jobId} progress={progress} statusMessage={statusMessage} />
+          </div>
         )}
 
         {state === 'viewer' && modelUrl && (
-          <ViewerComponent modelUrl={modelUrl} onReset={handleRetry} />
+          <div className="w-full">
+            <ViewerComponent modelUrl={modelUrl} onReset={handleRetry} />
+          </div>
         )}
 
         {state === 'error' && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <h2 className="text-xl font-semibold text-red-800 mb-2">
-              Error
-            </h2>
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
-              onClick={handleRetry}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Try Again
-            </button>
+          <div className="w-full flex justify-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center max-w-md">
+              <h2 className="text-xl font-semibold text-red-800 mb-2">
+                Error
+              </h2>
+              <p className="text-red-600 mb-4">{error}</p>
+              <button
+                onClick={handleRetry}
+                className="px-6 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#000] transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
         )}
       </div>

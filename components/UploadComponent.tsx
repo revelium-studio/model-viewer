@@ -1,10 +1,14 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Image from 'next/image'
 
 interface UploadComponentProps {
   onUpload: (file: File) => void
 }
+
+const LOGO_URL = 'https://pub-31178c53271846bd9cb48918a4fdd72e.r2.dev/wordmark.svg'
+const UPLOAD_ICON_URL = 'https://pub-31178c53271846bd9cb48918a4fdd72e.r2.dev/upload.svg'
 
 export default function UploadComponent({ onUpload }: UploadComponentProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -39,9 +43,10 @@ export default function UploadComponent({ onUpload }: UploadComponentProps) {
   }
 
   const handleFile = (file: File) => {
-    // Validate file type
-    if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
-      alert('Please upload a JPG or PNG image')
+    // Validate file type - support JPG, PNG, WebP, AVIF
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif']
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload a JPG, PNG, WebP, or AVIF image')
       return
     }
 
@@ -68,12 +73,27 @@ export default function UploadComponent({ onUpload }: UploadComponentProps) {
   }
 
   return (
-    <div className="w-full">
-      <div
-        className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-          dragActive
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
+    <div className="relative w-full min-h-screen flex flex-col items-center justify-center">
+      {/* Logo/Wordmark at top center */}
+      <div className="absolute top-[123px] left-1/2 -translate-x-1/2 z-10">
+        <img 
+          src={LOGO_URL} 
+          alt="Revelium Studio" 
+          className="h-[34.313px] w-auto"
+        />
+      </div>
+
+      {/* Title: "3D Model Generator" */}
+      <div className="absolute top-[123px] left-1/2 -translate-x-1/2 z-10 mt-12">
+        <p className="text-[#2f2f2f] text-[23.54px] font-semibold tracking-[-0.2354px] text-center leading-[0.75] whitespace-nowrap">
+          3D Model Generator
+        </p>
+      </div>
+
+      {/* Main white container */}
+      <div 
+        className={`relative bg-white rounded-[30px] w-full max-w-[756px] h-[456px] flex flex-col items-center justify-center transition-all ${
+          dragActive ? 'ring-2 ring-blue-500' : ''
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -83,20 +103,20 @@ export default function UploadComponent({ onUpload }: UploadComponentProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
           onChange={handleFileInput}
           className="hidden"
         />
 
         {preview ? (
-          <div className="space-y-4">
+          <div className="space-y-6 px-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={preview}
               alt="Preview"
               className="max-h-64 mx-auto rounded-lg shadow-lg"
             />
-            <p className="text-sm text-gray-600">{selectedFile?.name}</p>
+            <p className="text-sm text-[#2f2f2f] text-center">{selectedFile?.name}</p>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => {
@@ -106,48 +126,46 @@ export default function UploadComponent({ onUpload }: UploadComponentProps) {
                     fileInputRef.current.value = ''
                   }
                 }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-4 py-2 text-[#2f2f2f] hover:text-[#000] transition-colors"
               >
                 Change Image
               </button>
               <button
                 onClick={handleSubmit}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#000] transition-colors"
               >
                 Generate 3D Model
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              stroke="currentColor"
-              fill="none"
-              viewBox="0 0 48 48"
-            >
-              <path
-                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          <div className="flex flex-col items-center justify-center space-y-6">
+            {/* Upload Icon */}
+            <div className="w-[147px] h-[147px] flex items-center justify-center mb-6">
+              <img 
+                src={UPLOAD_ICON_URL} 
+                alt="Upload" 
+                className="w-full h-full"
+                unoptimized
               />
-            </svg>
-            <div>
-              <p className="text-lg font-medium text-gray-700">
-                Drag and drop an image here
-              </p>
-              <p className="text-sm text-gray-500 mt-1">or</p>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Browse Files
-              </button>
             </div>
-            <p className="text-xs text-gray-400">
-              JPG or PNG, max 10MB
+
+            {/* Text: "or drop your image here" */}
+            <p className="text-[#2f2f2f] text-[23.54px] font-semibold tracking-[-0.7062px] text-center leading-[0.75] mb-2">
+              or drop your image here
             </p>
+
+            {/* Supported formats text */}
+            <p className="text-[#2f2f2f] text-[12.54px] font-semibold tracking-[0.1254px] text-center leading-[0.75]">
+              JPG, PNG, WebP, AVIF supported – max 10mb
+            </p>
+
+            {/* Hidden click area - clicking anywhere in the container triggers file input */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              aria-label="Upload image"
+            />
           </div>
         )}
       </div>
