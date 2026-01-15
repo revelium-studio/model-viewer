@@ -44,7 +44,9 @@ export async function createHyper3DJob(imageBuffer: Buffer, imageName: string): 
 
   try {
     // First, upload the image to fal.ai storage
-    const imageFile = new File([imageBuffer], imageName, { type: 'image/jpeg' })
+    // Convert Buffer to Uint8Array for File constructor
+    const uint8Array = new Uint8Array(imageBuffer)
+    const imageFile = new File([uint8Array], imageName, { type: 'image/jpeg' })
     const imageUrl = await fal.storage.upload(imageFile)
 
     // Submit job to fal.ai queue
@@ -85,7 +87,8 @@ export async function getHyper3DJobStatus(requestId: string): Promise<FalJobStat
     // Map fal.ai status to our internal status format
     let mappedStatus: 'pending' | 'processing' | 'completed' | 'failed'
     
-    switch (status.status) {
+    const statusStr = String(status.status).toUpperCase()
+    switch (statusStr) {
       case 'IN_QUEUE':
         mappedStatus = 'pending'
         break
@@ -105,8 +108,8 @@ export async function getHyper3DJobStatus(requestId: string): Promise<FalJobStat
     return {
       status: mappedStatus,
       requestId: status.request_id || requestId,
-      progress: status.status === 'IN_PROGRESS' ? undefined : undefined, // fal.ai doesn't provide progress percentage
-      error: status.error?.message,
+      progress: undefined, // fal.ai doesn't provide progress percentage
+      error: (status as any).error?.message || (status as any).error,
     }
   } catch (error) {
     console.error('Error checking fal.ai job status:', error)
