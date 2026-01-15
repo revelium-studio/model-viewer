@@ -1,60 +1,291 @@
 'use client'
 
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { Cpu, Layers, Sparkles } from 'lucide-react'
+
 interface LoadingComponentProps {
   jobId: string | null
   progress: number
   statusMessage: string
+  imagePreview: string
+  fileName: string
 }
 
+// Messages for 3D model generation phases
+const PHASE_MESSAGES = {
+  analysis: [
+    'Analyzing image structure',
+    'Extracting geometric features',
+    'Mapping spatial relationships',
+  ],
+  generation: [
+    'Generating 3D geometry',
+    'Creating mesh topology',
+    'Building vertex data',
+  ],
+  optimization: [
+    'Optimizing mesh quality',
+    'Refining surface details',
+    'Finalizing 3D model',
+  ],
+}
+
+const steps = [
+  { icon: Cpu, label: 'Image Analysis', threshold: 0, phase: 'analysis' as const },
+  { icon: Layers, label: '3D Generation', threshold: 33, phase: 'generation' as const },
+  { icon: Sparkles, label: 'Optimization', threshold: 66, phase: 'optimization' as const },
+]
+
+const LOGO_URL = 'https://pub-31178c53271846bd9cb48918a4fdd72e.r2.dev/wordmark.svg'
 const FONT_FAMILY = "'HK Guise', sans-serif"
 
-export default function LoadingComponent({ jobId, progress, statusMessage }: LoadingComponentProps) {
+export default function LoadingComponent({
+  jobId,
+  progress,
+  statusMessage,
+  imagePreview,
+  fileName,
+}: LoadingComponentProps) {
+  const [displayedProgress, setDisplayedProgress] = useState(0)
+  const [currentMessage, setCurrentMessage] = useState(PHASE_MESSAGES.analysis[0])
+  const lastProgressRef = useRef(0)
+  const messageIndexRef = useRef(0)
+
+  // Never go backwards - only increase
+  useEffect(() => {
+    if (progress > lastProgressRef.current) {
+      setDisplayedProgress(progress)
+      lastProgressRef.current = progress
+    }
+  }, [progress])
+
+  // Update message based on current phase
+  useEffect(() => {
+    let phase: 'analysis' | 'generation' | 'optimization' = 'analysis'
+    
+    if (displayedProgress >= 66) {
+      phase = 'optimization'
+    } else if (displayedProgress >= 33) {
+      phase = 'generation'
+    }
+
+    const messages = PHASE_MESSAGES[phase]
+    const subProgress = phase === 'analysis' 
+      ? displayedProgress / 33 
+      : phase === 'generation' 
+        ? (displayedProgress - 33) / 33 
+        : (displayedProgress - 66) / 34
+    
+    const messageIndex = Math.min(
+      Math.floor(subProgress * messages.length),
+      messages.length - 1
+    )
+
+    if (messageIndex !== messageIndexRef.current || PHASE_MESSAGES[phase][messageIndex] !== currentMessage) {
+      messageIndexRef.current = messageIndex
+      setCurrentMessage(messages[messageIndex])
+    }
+  }, [displayedProgress, currentMessage])
+
+  const currentStepIndex = steps.findIndex(
+    (step, index) =>
+      displayedProgress >= step.threshold &&
+      (index === steps.length - 1 || displayedProgress < steps[index + 1].threshold)
+  )
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-8">
-      <div className="space-y-6">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
-          <h2 
-            className="text-2xl font-semibold mb-2"
-            style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
-          >
-            Generating 3D Model
-          </h2>
-          <p 
-            className="text-gray-600"
-            style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
-          >
-            {statusMessage}
-          </p>
-          {jobId && (
-            <p 
-              className="text-xs text-gray-400 mt-2"
-              style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
-            >
-              Job ID: {jobId}
-            </p>
-          )}
-        </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Header */}
+      <header className="py-6 sm:py-10 px-4 sm:px-8 text-center">
+        <img
+          src={LOGO_URL}
+          alt="Revelium Studio"
+          className="h-4 sm:h-10 mx-auto mb-3 sm:mb-4 w-auto"
+        />
+        <p 
+          className="text-muted text-base sm:text-lg font-medium"
+          style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+        >
+          3D Model Generator
+        </p>
+      </header>
 
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-gray-600">
-            <span>Progress</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div
-              className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${Math.min(progress, 100)}%` }}
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-xl"
+        >
+          {/* Image preview with gradient glow */}
+          <div className="relative mb-8">
+            {/* Outer blurred glow */}
+            <div 
+              className="absolute -inset-6 rounded-3xl"
+              style={{
+                background: `conic-gradient(
+                  from var(--glow-angle, 0deg),
+                  #ff6b6b,
+                  #feca57,
+                  #48dbfb,
+                  #ff9ff3,
+                  #54a0ff,
+                  #5f27cd,
+                  #ff6b6b
+                )`,
+                filter: 'blur(40px)',
+                opacity: 0.5,
+                animation: 'rotateGlow 4s linear infinite',
+              }}
             />
-          </div>
-        </div>
+            
+            {/* Inner border glow */}
+            <div 
+              className="absolute -inset-1 rounded-2xl"
+              style={{
+                background: `conic-gradient(
+                  from var(--glow-angle, 0deg),
+                  #ff6b6b,
+                  #feca57,
+                  #48dbfb,
+                  #ff9ff3,
+                  #54a0ff,
+                  #5f27cd,
+                  #ff6b6b
+                )`,
+                filter: 'blur(8px)',
+                opacity: 0.8,
+                animation: 'rotateGlow 3s linear infinite',
+              }}
+            />
 
-        <div className="text-center text-sm text-gray-500">
-          <p style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}>This may take a few minutes...</p>
-          <p className="mt-1" style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}>Please keep this page open</p>
-        </div>
-      </div>
+            {/* Image container */}
+            <div className="relative overflow-hidden bg-card rounded-2xl border border-white/10">
+              <div className="relative aspect-[16/10]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imagePreview}
+                  alt="Processing"
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Corner markers */}
+                <div className="absolute top-4 left-4 w-5 h-5 border-l-2 border-t-2 border-white/30" />
+                <div className="absolute top-4 right-4 w-5 h-5 border-r-2 border-t-2 border-white/30" />
+                <div className="absolute bottom-4 left-4 w-5 h-5 border-l-2 border-b-2 border-white/30" />
+                <div className="absolute bottom-4 right-4 w-5 h-5 border-r-2 border-b-2 border-white/30" />
+              </div>
+            </div>
+          </div>
+
+          {/* Progress section */}
+          <div className="text-center mb-10">
+            {/* Message that matches current phase */}
+            <div className="flex items-center justify-center gap-2 mb-4 h-6">
+              <div className="relative w-2 h-2">
+                <div className="absolute inset-0 rounded-full bg-foreground" />
+                <div className="absolute inset-0 rounded-full bg-foreground animate-ping opacity-75" />
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={currentMessage}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-foreground text-sm font-medium"
+                  style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+                >
+                  {currentMessage}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+
+            {/* Progress bar */}
+            <div className="relative h-1.5 bg-border rounded-full overflow-hidden mb-3">
+              <motion.div
+                className="absolute inset-y-0 left-0 bg-foreground rounded-full"
+                style={{ width: `${displayedProgress}%` }}
+              />
+            </div>
+
+            {/* Percentage and filename */}
+            <div className="flex items-center justify-between text-sm">
+              <p 
+                className="text-muted"
+                style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+              >
+                Processing{' '}
+                <span className="text-foreground font-medium">{fileName}</span>
+              </p>
+              <span 
+                className="text-foreground font-medium tabular-nums"
+                style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+              >
+                {Math.round(displayedProgress)}%
+              </span>
+            </div>
+          </div>
+
+          {/* Step indicators */}
+          <div className="flex items-center justify-between px-8">
+            {steps.map((step, index) => {
+              const isActive = displayedProgress >= step.threshold
+              const isCurrent = index === currentStepIndex
+              const Icon = step.icon
+
+              return (
+                <motion.div
+                  key={step.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex flex-col items-center gap-3"
+                >
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                      isCurrent
+                        ? 'bg-foreground text-white'
+                        : isActive
+                        ? 'bg-border text-foreground'
+                        : 'bg-background text-muted'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={1.5} />
+                  </div>
+                  <span
+                    className={`text-xs transition-colors duration-300 ${
+                      isActive ? 'text-foreground' : 'text-muted'
+                    }`}
+                    style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+                  >
+                    {step.label}
+                  </span>
+                </motion.div>
+              )
+            })}
+          </div>
+        </motion.div>
+      </main>
+
+      {/* CSS for rotating glow animation */}
+      <style jsx>{`
+        @property --glow-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+        
+        @keyframes rotateGlow {
+          from {
+            --glow-angle: 0deg;
+          }
+          to {
+            --glow-angle: 360deg;
+          }
+        }
+      `}</style>
     </div>
   )
 }

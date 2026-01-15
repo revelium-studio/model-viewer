@@ -7,7 +7,20 @@ const config: Config = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        card: 'var(--card)',
+        'card-hover': 'var(--card-hover)',
+        border: 'var(--border)',
+        'border-strong': 'var(--border-strong)',
+        muted: 'var(--muted)',
+        'muted-light': 'var(--muted-light)',
+        accent: 'var(--accent)',
+        'accent-light': 'var(--accent-light)',
+      },
+    },
   },
   plugins: [],
 }

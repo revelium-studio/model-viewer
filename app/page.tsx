@@ -14,11 +14,21 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [statusMessage, setStatusMessage] = useState('Initializing...')
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [fileName, setFileName] = useState<string>('')
 
   const handleUpload = async (file: File) => {
     try {
       setState('loading')
       setError(null)
+      setFileName(file.name)
+      
+      // Create preview for loading screen
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
       
       const formData = new FormData()
       formData.append('image', file)
@@ -102,6 +112,8 @@ export default function Home() {
     setError(null)
     setProgress(0)
     setStatusMessage('Initializing...')
+    setImagePreview(null)
+    setFileName('')
   }
 
   return (
@@ -112,9 +124,22 @@ export default function Home() {
         )}
 
         {state === 'loading' && (
-          <div className="w-full flex justify-center">
-            <LoadingComponent jobId={jobId} progress={progress} statusMessage={statusMessage} />
-          </div>
+          imagePreview ? (
+            <LoadingComponent 
+              jobId={jobId} 
+              progress={progress} 
+              statusMessage={statusMessage}
+              imagePreview={imagePreview}
+              fileName={fileName}
+            />
+          ) : (
+            <div className="w-full flex justify-center items-center min-h-screen">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-foreground border-t-transparent mb-4"></div>
+                <p className="text-muted">Preparing...</p>
+              </div>
+            </div>
+          )
         )}
 
         {state === 'viewer' && modelUrl && (
