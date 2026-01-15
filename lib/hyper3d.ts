@@ -1,17 +1,24 @@
 import { fal } from '@fal-ai/client'
 
-// Configure fal.ai client with API key
-const FAL_KEY = process.env.FAL_KEY
+const MODEL_ID = 'fal-ai/hyper3d/rodin/v2'
 
-if (!FAL_KEY) {
-  console.warn('FAL_KEY is not set. API calls will fail.')
-} else {
+/**
+ * Configure fal.ai client with API key
+ * Called at runtime to ensure environment variables are available
+ */
+function configureFal() {
+  const FAL_KEY = process.env.FAL_KEY
+  
+  if (!FAL_KEY) {
+    throw new Error('FAL_KEY environment variable is not set. Please add it in Vercel environment variables and redeploy.')
+  }
+  
   fal.config({
     credentials: FAL_KEY,
   })
+  
+  return FAL_KEY
 }
-
-const MODEL_ID = 'fal-ai/hyper3d/rodin/v2'
 
 export interface FalJobStatus {
   status: 'pending' | 'processing' | 'completed' | 'failed'
@@ -38,9 +45,8 @@ export interface FalJobResult {
  * Upload image to fal.ai storage and create a 3D generation job
  */
 export async function createHyper3DJob(imageBuffer: Buffer, imageName: string): Promise<string> {
-  if (!FAL_KEY) {
-    throw new Error('FAL_KEY environment variable is not set')
-  }
+  // Configure fal.ai at runtime
+  configureFal()
 
   try {
     // First, upload the image to fal.ai storage
@@ -74,9 +80,8 @@ export async function createHyper3DJob(imageBuffer: Buffer, imageName: string): 
  * Get the status of a fal.ai job
  */
 export async function getHyper3DJobStatus(requestId: string): Promise<FalJobStatus> {
-  if (!FAL_KEY) {
-    throw new Error('FAL_KEY environment variable is not set')
-  }
+  // Configure fal.ai at runtime
+  configureFal()
 
   try {
     const status = await fal.queue.status(MODEL_ID, {
@@ -124,9 +129,8 @@ export async function getHyper3DJobStatus(requestId: string): Promise<FalJobStat
  * Get the result of a completed fal.ai job
  */
 export async function getHyper3DJobResult(requestId: string): Promise<FalJobResult> {
-  if (!FAL_KEY) {
-    throw new Error('FAL_KEY environment variable is not set')
-  }
+  // Configure fal.ai at runtime
+  configureFal()
 
   try {
     const result = await fal.queue.result(MODEL_ID, {
