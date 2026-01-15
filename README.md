@@ -22,8 +22,8 @@ A production-ready Next.js web application that transforms 2D images into 3D mod
 ## Prerequisites
 
 - Node.js 18+ and npm/yarn/pnpm
-- Hyper3D/Rodin API credentials
-- Cloudflare R2 bucket and credentials
+- fal.ai API key (sign up at https://fal.ai - free tier available)
+- Cloudflare R2 bucket and credentials (optional, for permanent storage)
 
 ## Local Setup
 
@@ -47,11 +47,10 @@ A production-ready Next.js web application that transforms 2D images into 3D mod
    Create a `.env.local` file in the root directory:
 
    ```env
-   # Hyper3D / Rodin API Configuration
-   HYPER3D_API_KEY=your_hyper3d_api_key_here
-   HYPER3D_API_BASE_URL=https://api.hyper3d.ai
+   # fal.ai API Configuration (used as middleman for Hyper3D/Rodin)
+   FAL_KEY=your_fal_ai_api_key_here
 
-   # Cloudflare R2 Configuration
+   # Cloudflare R2 Configuration (optional, for permanent storage)
    R2_ACCOUNT_ID=your_r2_account_id
    R2_ACCESS_KEY_ID=your_r2_access_key_id
    R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
@@ -60,7 +59,10 @@ A production-ready Next.js web application that transforms 2D images into 3D mod
    R2_PUBLIC_BASE_URL=https://your-custom-domain.com
    ```
 
-   **Note**: `R2_PUBLIC_BASE_URL` is optional. If you have a custom domain for your R2 bucket, use it here. Otherwise, the app will construct URLs from the endpoint.
+   **Note**: 
+   - `FAL_KEY` is **required** - Get it from https://fal.ai/dashboard
+   - R2 variables are **optional** - If not set, models will use fal.ai URLs (temporary)
+   - `R2_PUBLIC_BASE_URL` is optional. If you have a custom domain for your R2 bucket, use it here.
 
 4. **Run the development server**
    ```bash
@@ -87,9 +89,8 @@ A production-ready Next.js web application that transforms 2D images into 3D mod
 
    In the Vercel project settings, add all the environment variables from your `.env.local`:
 
-   - `HYPER3D_API_KEY`
-   - `HYPER3D_API_BASE_URL` (optional, defaults to `https://api.hyper3d.ai`)
-   - `R2_ACCOUNT_ID`
+   - `FAL_KEY` (required - get from https://fal.ai/dashboard)
+   - `R2_ACCOUNT_ID` (optional)
    - `R2_ACCESS_KEY_ID`
    - `R2_SECRET_ACCESS_KEY`
    - `R2_BUCKET_NAME`
@@ -116,15 +117,19 @@ A production-ready Next.js web application that transforms 2D images into 3D mod
    - If you want public URLs, configure a custom domain or public bucket
    - Set `R2_PUBLIC_BASE_URL` to your custom domain
 
-## Hyper3D / Rodin API Setup
+## fal.ai Setup
 
-1. **Get API Credentials**
-   - Sign up at [Hyper3D](https://hyper3d.ai) or [Rodin](https://rodin.ai)
-   - Obtain your API key from the dashboard
+This app uses **fal.ai** to access Hyper3D/Rodin v2, which is more cost-effective than direct Hyper3D business accounts.
 
-2. **Configure API Endpoint**
-   - Use the base URL provided by Hyper3D/Rodin
-   - Default is `https://api.hyper3d.ai` but may vary
+1. **Get fal.ai API Key**
+   - Sign up at [fal.ai](https://fal.ai) (free tier available)
+   - Go to [Dashboard](https://fal.ai/dashboard) → API Keys
+   - Copy your API key
+
+2. **Set Environment Variable**
+   - Add `FAL_KEY=your_api_key` to `.env.local` (local) or Vercel environment variables
+
+For detailed setup instructions, see [FAL_AI_SETUP.md](./FAL_AI_SETUP.md)
 
 ## Project Structure
 
@@ -246,6 +251,8 @@ For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
 ## Support
 
 For issues or questions:
-- Check the [Hyper3D/Rodin API documentation](https://docs.hyper3d.ai)
+- Check the [fal.ai documentation](https://fal.ai/docs)
+- Review [Hyper3D/Rodin model page](https://fal.ai/models/fal-ai/hyper3d/rodin/v2)
 - Review [Cloudflare R2 documentation](https://developers.cloudflare.com/r2/)
+- See [FAL_AI_SETUP.md](./FAL_AI_SETUP.md) for fal.ai setup help
 - Open an issue on GitHub

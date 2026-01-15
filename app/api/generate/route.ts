@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await imageFile.arrayBuffer()
     const imageBuffer = Buffer.from(arrayBuffer)
 
-    // Create Hyper3D job
+    // Create fal.ai job (this uploads image and submits job)
     const jobId = await createHyper3DJob(imageBuffer, imageFile.name)
 
     return NextResponse.json({ jobId })

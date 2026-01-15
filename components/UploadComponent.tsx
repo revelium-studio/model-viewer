@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Image from 'next/image'
 
 interface UploadComponentProps {
   onUpload: (file: File) => void
@@ -90,11 +91,16 @@ export default function UploadComponent({ onUpload }: UploadComponentProps) {
 
         {preview ? (
           <div className="space-y-4">
-            <img
-              src={preview}
-              alt="Preview"
-              className="max-h-64 mx-auto rounded-lg shadow-lg"
-            />
+            <div className="relative max-h-64 mx-auto rounded-lg shadow-lg overflow-hidden">
+              <Image
+                src={preview}
+                alt="Preview"
+                width={512}
+                height={256}
+                className="object-contain max-h-64 w-auto mx-auto"
+                unoptimized
+              />
+            </div>
             <p className="text-sm text-gray-600">{selectedFile?.name}</p>
             <div className="flex gap-4 justify-center">
               <button

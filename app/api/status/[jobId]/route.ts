@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getHyper3DJobStatus, downloadHyper3DModel } from '@/lib/hyper3d'
+import { getHyper3DJobStatus, getHyper3DJobResult, downloadHyper3DModel } from '@/lib/hyper3d'
 import { uploadToR2 } from '@/lib/r2'
 
 export const runtime = 'nodejs'
@@ -19,19 +19,22 @@ export async function GET(
       )
     }
 
-    // Get job status from Hyper3D
+    // Get job status from fal.ai
     const status = await getHyper3DJobStatus(jobId)
 
-    // If job is completed, download model and upload to R2
-    if (status.status === 'completed' && status.modelUrl) {
+    // If job is completed, get result, download model and upload to R2
+    if (status.status === 'completed') {
       try {
-        // Download model from Hyper3D
-        const modelBuffer = await downloadHyper3DModel(status.modelUrl)
+        // Get the job result from fal.ai
+        const result = await getHyper3DJobResult(jobId)
+        const modelUrl = result.model_mesh.url
+
+        // Download model from fal.ai
+        const modelBuffer = await downloadHyper3DModel(modelUrl)
 
         // Determine file extension and content type
-        const isGlb = status.modelUrl.toLowerCase().endsWith('.glb')
-        const fileName = isGlb ? 'model.glb' : 'model.gltf'
-        const contentType = isGlb ? 'model/gltf-binary' : 'model/gltf+json'
+        const contentType = result.model_mesh.content_type || 'model/gltf-binary'
+        const fileName = result.model_mesh.file_name || 'model.glb'
 
         // Upload to R2
         const r2Url = await uploadToR2(modelBuffer, fileName, contentType)
@@ -41,13 +44,18 @@ export async function GET(
           modelUrl: r2Url,
         })
       } catch (uploadError) {
-        console.error('Error uploading to R2:', uploadError)
-        // Return the original modelUrl as fallback
-        return NextResponse.json({
-          status: 'completed',
-          modelUrl: status.modelUrl,
-          warning: 'Failed to upload to R2, using temporary URL',
-        })
+        console.error('Error processing completed job:', uploadError)
+        // Try to get result anyway and return the fal.ai URL as fallback
+        try {
+          const result = await getHyper3DJobResult(jobId)
+          return NextResponse.json({
+            status: 'completed',
+            modelUrl: result.model_mesh.url,
+            warning: 'Failed to upload to R2, using fal.ai URL',
+          })
+        } catch (resultError) {
+          throw uploadError
+        }
       }
     }
 

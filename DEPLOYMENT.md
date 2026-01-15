@@ -111,8 +111,7 @@ gh repo create revelium-studio/model-viewer --public --source=. --remote=origin 
 2. Add the following variables:
 
    ```
-   HYPER3D_API_KEY=your_hyper3d_api_key_here
-   HYPER3D_API_BASE_URL=https://api.hyper3d.ai
+   FAL_KEY=your_fal_ai_api_key_here
    R2_ACCOUNT_ID=your_r2_account_id
    R2_ACCESS_KEY_ID=your_r2_access_key_id
    R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
@@ -133,8 +132,7 @@ gh repo create revelium-studio/model-viewer --public --source=. --remote=origin 
 ### Using Vercel CLI:
 
 ```bash
-vercel env add HYPER3D_API_KEY
-vercel env add HYPER3D_API_BASE_URL
+vercel env add FAL_KEY
 vercel env add R2_ACCOUNT_ID
 vercel env add R2_ACCESS_KEY_ID
 vercel env add R2_SECRET_ACCESS_KEY
@@ -183,10 +181,11 @@ If you encounter build errors:
 
 ### API Errors
 
-If Hyper3D API calls fail:
-1. Verify `HYPER3D_API_KEY` is set correctly
-2. Check `HYPER3D_API_BASE_URL` matches your API provider's endpoint
-3. Test API credentials using curl or Postman
+If fal.ai API calls fail:
+1. Verify `FAL_KEY` is set correctly
+2. Check your fal.ai account has credits/balance
+3. Verify API key at https://fal.ai/dashboard
+4. See [FAL_AI_SETUP.md](./FAL_AI_SETUP.md) for detailed setup
 
 ## Continuous Deployment
 

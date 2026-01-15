@@ -1,101 +1,163 @@
-interface Hyper3DJobResponse {
-  jobId: string
-  status: string
-  message?: string
+import { fal } from '@fal-ai/client'
+
+// Configure fal.ai client with API key
+const FAL_KEY = process.env.FAL_KEY
+
+if (!FAL_KEY) {
+  console.warn('FAL_KEY is not set. API calls will fail.')
+} else {
+  fal.config({
+    credentials: FAL_KEY,
+  })
 }
 
-interface Hyper3DStatusResponse {
+const MODEL_ID = 'fal-ai/hyper3d/rodin/v2'
+
+export interface FalJobStatus {
   status: 'pending' | 'processing' | 'completed' | 'failed'
+  requestId: string
   progress?: number
-  modelUrl?: string
   error?: string
 }
 
-const API_BASE_URL = process.env.HYPER3D_API_BASE_URL || 'https://api.hyper3d.ai'
-const API_KEY = process.env.HYPER3D_API_KEY!
-
-if (!API_KEY) {
-  console.warn('HYPER3D_API_KEY is not set. API calls will fail.')
+export interface FalJobResult {
+  model_mesh: {
+    url: string
+    content_type?: string
+    file_name?: string
+  }
+  textures: Array<{
+    url: string
+    content_type?: string
+    file_name?: string
+  }>
+  seed: number
 }
 
+/**
+ * Upload image to fal.ai storage and create a 3D generation job
+ */
 export async function createHyper3DJob(imageBuffer: Buffer, imageName: string): Promise<string> {
-  if (!API_KEY) {
-    throw new Error('HYPER3D_API_KEY environment variable is not set')
+  if (!FAL_KEY) {
+    throw new Error('FAL_KEY environment variable is not set')
   }
 
   try {
-    // Use form-data for Node.js compatibility
-    const FormData = (await import('form-data')).default
-    const formData = new FormData()
-    formData.append('image', imageBuffer, {
-      filename: imageName,
-      contentType: 'image/jpeg',
-    })
+    // First, upload the image to fal.ai storage
+    const imageFile = new File([imageBuffer], imageName, { type: 'image/jpeg' })
+    const imageUrl = await fal.storage.upload(imageFile)
 
-    const headers = formData.getHeaders()
-    const response = await fetch(`${API_BASE_URL}/v1/generate`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        ...headers,
+    // Submit job to fal.ai queue
+    const { request_id } = await fal.queue.submit(MODEL_ID, {
+      input: {
+        input_image_urls: [imageUrl],
+        geometry_file_format: 'glb',
+        material: 'All',
+        quality_mesh_option: '500K Triangle',
+        preview_render: false,
       },
-      body: formData as any,
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Hyper3D API error: ${response.status} - ${errorText}`)
-    }
-
-    const data: Hyper3DJobResponse = await response.json()
-    return data.jobId
+    return request_id
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('fetch failed')) {
-      throw new Error(`Network error: Unable to connect to Hyper3D API at ${API_BASE_URL}. Please check your internet connection and API endpoint.`)
+    console.error('Error creating fal.ai job:', error)
+    if (error instanceof Error) {
+      throw new Error(`fal.ai API error: ${error.message}`)
     }
-    throw error
+    throw new Error('Failed to create generation job')
   }
 }
 
-export async function getHyper3DJobStatus(jobId: string): Promise<Hyper3DStatusResponse> {
-  if (!API_KEY) {
-    throw new Error('HYPER3D_API_KEY environment variable is not set')
+/**
+ * Get the status of a fal.ai job
+ */
+export async function getHyper3DJobStatus(requestId: string): Promise<FalJobStatus> {
+  if (!FAL_KEY) {
+    throw new Error('FAL_KEY environment variable is not set')
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/jobs/${jobId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-      },
+    const status = await fal.queue.status(MODEL_ID, {
+      requestId,
+      logs: true,
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Hyper3D API error: ${response.status} - ${errorText}`)
+    // Map fal.ai status to our internal status format
+    let mappedStatus: 'pending' | 'processing' | 'completed' | 'failed'
+    
+    switch (status.status) {
+      case 'IN_QUEUE':
+        mappedStatus = 'pending'
+        break
+      case 'IN_PROGRESS':
+        mappedStatus = 'processing'
+        break
+      case 'COMPLETED':
+        mappedStatus = 'completed'
+        break
+      case 'FAILED':
+        mappedStatus = 'failed'
+        break
+      default:
+        mappedStatus = 'pending'
     }
 
-    const data: Hyper3DStatusResponse = await response.json()
-    return data
-  } catch (error) {
-    if (error instanceof TypeError && error.message.includes('fetch failed')) {
-      throw new Error(`Network error: Unable to connect to Hyper3D API at ${API_BASE_URL}. Please check your internet connection and API endpoint.`)
+    return {
+      status: mappedStatus,
+      requestId: status.request_id || requestId,
+      progress: status.status === 'IN_PROGRESS' ? undefined : undefined, // fal.ai doesn't provide progress percentage
+      error: status.error?.message,
     }
-    throw error
+  } catch (error) {
+    console.error('Error checking fal.ai job status:', error)
+    if (error instanceof Error) {
+      throw new Error(`fal.ai API error: ${error.message}`)
+    }
+    throw new Error('Failed to check job status')
   }
 }
 
+/**
+ * Get the result of a completed fal.ai job
+ */
+export async function getHyper3DJobResult(requestId: string): Promise<FalJobResult> {
+  if (!FAL_KEY) {
+    throw new Error('FAL_KEY environment variable is not set')
+  }
+
+  try {
+    const result = await fal.queue.result(MODEL_ID, {
+      requestId,
+    })
+
+    return result.data as FalJobResult
+  } catch (error) {
+    console.error('Error getting fal.ai job result:', error)
+    if (error instanceof Error) {
+      throw new Error(`fal.ai API error: ${error.message}`)
+    }
+    throw new Error('Failed to get job result')
+  }
+}
+
+/**
+ * Download model file from URL
+ */
 export async function downloadHyper3DModel(modelUrl: string): Promise<Buffer> {
-  const response = await fetch(modelUrl, {
-    headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-    },
-  })
+  try {
+    const response = await fetch(modelUrl)
 
-  if (!response.ok) {
-    throw new Error(`Failed to download model: ${response.status}`)
+    if (!response.ok) {
+      throw new Error(`Failed to download model: ${response.status}`)
+    }
+
+    const arrayBuffer = await response.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  } catch (error) {
+    console.error('Error downloading model:', error)
+    if (error instanceof Error) {
+      throw new Error(`Download error: ${error.message}`)
+    }
+    throw new Error('Failed to download model')
   }
-
-  const arrayBuffer = await response.arrayBuffer()
-  return Buffer.from(arrayBuffer)
 }

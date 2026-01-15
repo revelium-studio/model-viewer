@@ -95,8 +95,7 @@ Then add environment variables via CLI or Dashboard.
 Make sure these are set in Vercel:
 
 ```
-HYPER3D_API_KEY=your_key_here
-HYPER3D_API_BASE_URL=https://api.hyper3d.ai
+FAL_KEY=your_fal_ai_api_key_here
 R2_ACCOUNT_ID=your_account_id
 R2_ACCESS_KEY_ID=your_access_key
 R2_SECRET_ACCESS_KEY=your_secret_key
@@ -122,8 +121,9 @@ R2_PUBLIC_BASE_URL=https://your-custom-domain.com
    - Look for specific error messages
 
 2. **Verify API Credentials**:
-   - Test Hyper3D API key separately
-   - Verify API endpoint URL is correct
+   - Get fal.ai API key from https://fal.ai/dashboard
+   - Verify `FAL_KEY` is set correctly
+   - Check fal.ai account has credits/balance
 
 3. **Check Network**:
    - Ensure Vercel can reach the API endpoint
