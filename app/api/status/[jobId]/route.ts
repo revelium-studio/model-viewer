@@ -36,12 +36,25 @@ export async function GET(
         const contentType = result.model_mesh.content_type || 'model/gltf-binary'
         const fileName = result.model_mesh.file_name || 'model.glb'
 
-        // Upload to R2
-        const r2Url = await uploadToR2(modelBuffer, fileName, contentType)
+        // Upload to R2 (if configured)
+        let finalModelUrl = modelUrl // Default to fal.ai URL
+        
+        try {
+          if (process.env.R2_BUCKET_NAME && process.env.R2_ACCESS_KEY_ID) {
+            const r2Url = await uploadToR2(modelBuffer, fileName, contentType)
+            finalModelUrl = r2Url
+            console.log('Model uploaded to R2:', r2Url)
+          } else {
+            console.log('R2 not configured, using fal.ai URL')
+          }
+        } catch (r2Error) {
+          console.error('R2 upload failed, using fal.ai URL as fallback:', r2Error)
+          // Continue with fal.ai URL - it's already set as finalModelUrl
+        }
 
         return NextResponse.json({
           status: 'completed',
-          modelUrl: r2Url,
+          modelUrl: finalModelUrl,
         })
       } catch (uploadError) {
         console.error('Error processing completed job:', uploadError)

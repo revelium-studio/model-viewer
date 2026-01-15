@@ -1,6 +1,9 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 
+// Note: R2 doesn't support ACL in the same way as S3
+// CORS must be configured in Cloudflare R2 bucket settings
+
 const r2Client = new S3Client({
   region: 'auto',
   endpoint: process.env.R2_ENDPOINT,
@@ -24,6 +27,8 @@ export async function uploadToR2(
   const key = `models/${timestamp}-${randomString}-${fileName}`
 
   // Upload file
+  // Note: R2 doesn't support ACL parameter like S3
+  // Public access and CORS must be configured in Cloudflare R2 bucket settings
   const upload = new Upload({
     client: r2Client,
     params: {
@@ -31,6 +36,8 @@ export async function uploadToR2(
       Key: key,
       Body: fileBuffer,
       ContentType: contentType,
+      // Cache control for better performance
+      CacheControl: 'public, max-age=31536000, immutable',
     },
   })
 
