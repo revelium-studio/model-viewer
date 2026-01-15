@@ -38,12 +38,16 @@ export async function GET(
 
         // Upload to R2 (if configured)
         let finalModelUrl = modelUrl // Default to fal.ai URL
+        let useProxy = false
         
         try {
           if (process.env.R2_BUCKET_NAME && process.env.R2_ACCESS_KEY_ID) {
             const r2Url = await uploadToR2(modelBuffer, fileName, contentType)
-            finalModelUrl = r2Url
-            console.log('Model uploaded to R2:', r2Url)
+            // Use proxy endpoint to avoid CORS issues until R2 CORS is configured
+            const origin = request.nextUrl.origin
+            finalModelUrl = `${origin}/api/proxy-model?url=${encodeURIComponent(r2Url)}`
+            useProxy = true
+            console.log('Model uploaded to R2, using proxy:', r2Url)
           } else {
             console.log('R2 not configured, using fal.ai URL')
           }
@@ -55,6 +59,7 @@ export async function GET(
         return NextResponse.json({
           status: 'completed',
           modelUrl: finalModelUrl,
+          ...(useProxy && { proxy: true, note: 'Using proxy to avoid CORS issues. Configure CORS in R2 for direct access.' }),
         })
       } catch (uploadError) {
         console.error('Error processing completed job:', uploadError)
