@@ -6,6 +6,8 @@ interface LoadingComponentProps {
   statusMessage: string
 }
 
+const FONT_FAMILY = "'HK Guise', sans-serif"
+
 export default function LoadingComponent({ jobId, progress, statusMessage }: LoadingComponentProps) {
 
   return (
@@ -13,10 +15,25 @@ export default function LoadingComponent({ jobId, progress, statusMessage }: Loa
       <div className="space-y-6">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
-          <h2 className="text-2xl font-semibold mb-2">Generating 3D Model</h2>
-          <p className="text-gray-600">{statusMessage}</p>
+          <h2 
+            className="text-2xl font-semibold mb-2"
+            style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+          >
+            Generating 3D Model
+          </h2>
+          <p 
+            className="text-gray-600"
+            style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+          >
+            {statusMessage}
+          </p>
           {jobId && (
-            <p className="text-xs text-gray-400 mt-2">Job ID: {jobId}</p>
+            <p 
+              className="text-xs text-gray-400 mt-2"
+              style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}
+            >
+              Job ID: {jobId}
+            </p>
           )}
         </div>
 
@@ -34,8 +51,8 @@ export default function LoadingComponent({ jobId, progress, statusMessage }: Loa
         </div>
 
         <div className="text-center text-sm text-gray-500">
-          <p>This may take a few minutes...</p>
-          <p className="mt-1">Please keep this page open</p>
+          <p style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}>This may take a few minutes...</p>
+          <p className="mt-1" style={{ fontFamily: FONT_FAMILY, fontWeight: 600 }}>Please keep this page open</p>
         </div>
       </div>
     </div>

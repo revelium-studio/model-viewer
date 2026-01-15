@@ -2,9 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'HK Guise';
+  src: url('https://pub-31178c53271846bd9cb48918a4fdd72e.r2.dev/HKGuise-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --foreground-rgb: 47, 47, 47;
   --background-rgb: 237, 237, 237;
+  --font-hk-guise: 'HK Guise', sans-serif;
 }
 
 body {
@@ -12,6 +21,8 @@ body {
   background: rgb(var(--background-rgb));
   margin: 0;
   padding: 0;
+  font-family: var(--font-hk-guise);
+  font-weight: 600;
 }
 
 @layer utilities {

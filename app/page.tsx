@@ -105,8 +105,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8" style={{ backgroundColor: '#ededed' }}>
-      <div className="w-full max-w-4xl">
+    <main className="min-h-screen" style={{ backgroundColor: '#ededed' }}>
+      <div className="w-full">
         {state === 'upload' && (
           <UploadComponent onUpload={handleUpload} />
         )}
