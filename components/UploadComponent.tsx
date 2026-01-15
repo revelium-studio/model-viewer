@@ -1,7 +1,6 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import Image from 'next/image'
 
 interface UploadComponentProps {
   onUpload: (file: File) => void
@@ -142,11 +141,11 @@ export default function UploadComponent({ onUpload }: UploadComponentProps) {
           <div className="flex flex-col items-center justify-center space-y-6">
             {/* Upload Icon */}
             <div className="w-[147px] h-[147px] flex items-center justify-center mb-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={UPLOAD_ICON_URL} 
                 alt="Upload" 
                 className="w-full h-full"
-                unoptimized
               />
             </div>
 
